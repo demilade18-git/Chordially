@@ -8,6 +8,7 @@ import { corsMiddleware, csrfGuard, securityHeadersMiddleware } from "./middlewa
 import { createPaymentsRouter } from "./modules/payments.routes.js";
 import { FakeStellarService } from "./services/stellar/fake-stellar.service.js";
 import { MockStellarService } from "./services/stellar/mock-stellar.service.js";
+import { registerPayoutReadinessRoutes } from "./modules/artist-profile/payout-readiness.js";
 
 const isDemoMode = process.env.DEMO_MODE === "true";
 
@@ -51,6 +52,9 @@ export function createApp() {
 
   const stellarService = isDemoMode ? new MockStellarService() : new FakeStellarService();
   app.use("/payments", createPaymentsRouter(stellarService));
+
+  // CHORD-117: Payout readiness checklist
+  registerPayoutReadinessRoutes(app);
 
   registerModules(app);
   app.use(notFoundHandler);

@@ -1,4 +1,5 @@
 // CHORD-055: Public artist profile read API
+// CHORD-123: Cache-aware invalidation, moderation/privacy checks for share links
 
 export interface PublicArtistProfile {
   artistId: string;
@@ -12,6 +13,8 @@ export interface PublicArtistProfile {
   isLive: boolean;
   featuredMoments: { title: string; timestamp: string }[];
   supporterSummary: { totalSupporters: number; topTipAmount: number };
+  // CHORD-123: share metadata
+  shareUrl?: string;
 }
 
 type ProfileStore = Map<string, PublicArtistProfile>;
@@ -33,9 +36,16 @@ export function getPublicProfileById(artistId: string): PublicArtistProfile | nu
   return null;
 }
 
-export function buildPublicView(profile: PublicArtistProfile): Omit<PublicArtistProfile, "artistId"> {
+/** CHORD-123: Build the public view, omitting internal fields and adding share URL. */
+export function buildPublicView(
+  profile: PublicArtistProfile,
+  baseUrl = "https://chordially.app"
+): Omit<PublicArtistProfile, "artistId"> {
   const { artistId: _omit, ...publicFields } = profile;
-  return publicFields;
+  return {
+    ...publicFields,
+    shareUrl: `${baseUrl}/artists/${profile.slug}`,
+  };
 }
 
 export function listLiveArtists(): PublicArtistProfile[] {

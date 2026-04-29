@@ -59,3 +59,6 @@ export const STEP_PATHS: Record<OnboardingStep, string> = {
   preview: "/artist/onboarding/preview",
   complete: "/artist/dashboard"
 };
+
+/** CHORD-117: Path to the payout readiness checklist page. */
+export const PAYOUT_READINESS_PATH = "/artist/onboarding/payout-readiness";

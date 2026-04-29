@@ -1,9 +1,10 @@
 // CHORD-119: Onboarding payout step
+// CHORD-117: Link to payout readiness checklist
 import { Shell } from "../../../../components/layout/shell";
 import { Card } from "../../../../components/ui/card";
 import { Input } from "../../../../components/ui/input";
 import { getArtist } from "../../../../lib/artist";
-import { getOnboardingState, STEPS, STEP_PATHS } from "../../../../lib/onboarding-state";
+import { getOnboardingState, STEPS, STEP_PATHS, PAYOUT_READINESS_PATH } from "../../../../lib/onboarding-state";
 import Link from "next/link";
 import { savePayout } from "./actions";
 
@@ -57,6 +58,13 @@ export default function ArtistPayoutPage() {
             <Link href={STEP_PATHS.media} className="button button--secondary">Back</Link>
           </div>
         </form>
+        {/* CHORD-117: Payout readiness checklist link */}
+        <p className="muted" style={{ marginTop: "1rem" }}>
+          Not sure if you're ready?{" "}
+          <Link href={PAYOUT_READINESS_PATH} style={{ color: "#7c3aed" }}>
+            View payout readiness checklist
+          </Link>
+        </p>
       </Card>
     </Shell>
   );
