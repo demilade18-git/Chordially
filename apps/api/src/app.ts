@@ -1,64 +1,76 @@
 import express from "express";
-import { auditMiddleware } from "./audit-middleware.js";
-import { listAuditEvents } from "./audit-store.js";
-import { registerModules } from "./modules/index.js";
-import { errorHandler } from "./middleware/error-handler.js";
-import { notFoundHandler } from "./middleware/not-found.js";
-import { corsMiddleware, csrfGuard, securityHeadersMiddleware } from "./middleware/security.js";
-import { createPaymentsRouter } from "./modules/payments.routes.js";
-import { FakeStellarService } from "./services/stellar/fake-stellar.service.js";
-import { MockStellarService } from "./services/stellar/mock-stellar.service.js";
-import { registerPayoutReadinessRoutes } from "./modules/artist-profile/payout-readiness.js";
+import { z } from "zod";
 
-const isDemoMode = process.env.DEMO_MODE === "true";
+import { env } from "./env.js";
+import { listUsers, loginUser, logoutUser, registerUser } from "./auth-store.js";
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  displayName: z.string().min(2)
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8)
+});
+
+const logoutSchema = z.object({
+  token: z.string().min(1)
+});
 
 export function createApp() {
   const app = express();
 
-  app.disable("x-powered-by");
-  app.use(corsMiddleware);
-  app.use(securityHeadersMiddleware);
-  app.use(csrfGuard);
   app.use(express.json());
-  app.use(auditMiddleware);
 
-  app.get("/health", (_req, res) => {
-    res.status(200).json({ status: "ok" });
+  app.get("/health", (_request, response) => {
+    response.json({
+      ok: true,
+      service: env.APP_NAME
+    });
   });
 
-  app.post("/profile", (req, res) => {
-    res.status(201).json({ id: "profile-demo", ...req.body });
+  app.get("/api/v1/meta", (_request, response) => {
+    response.json({
+      app: "Chordially",
+      phase: "hackathon-starter",
+      currentMilestone: "authentication"
+    });
   });
 
-  app.patch("/profile/:id", (req, res) => {
-    res.status(200).json({ id: req.params.id, ...req.body });
+  app.get("/api/v1/auth/users", (_request, response) => {
+    response.json({ users: listUsers() });
   });
 
-  app.get("/audit", (_req, res) => {
-    const { actor, action, from, to, limit, offset } = req.query as Record<string, string>;
-    let items = listAuditEvents();
+  app.post("/api/v1/auth/register", (request, response) => {
+    const payload = registerSchema.parse(request.body);
+    const user = registerUser(payload);
 
-    if (actor) items = items.filter((e) => e.actor === actor);
-    if (action) items = items.filter((e) => e.action.includes(action));
-    if (from) items = items.filter((e) => e.createdAt >= from);
-    if (to) items = items.filter((e) => e.createdAt <= to);
-
-    const total = items.length;
-    const off = Number(offset ?? 0);
-    const lim = Math.min(Number(limit ?? 50), 200);
-
-    res.status(200).json({ items: items.slice(off, off + lim), total, offset: off, limit: lim });
+    response.status(201).json({
+      message: "Registration starter flow completed.",
+      user
+    });
   });
 
-  const stellarService = isDemoMode ? new MockStellarService() : new FakeStellarService();
-  app.use("/payments", createPaymentsRouter(stellarService));
+  app.post("/api/v1/auth/login", (request, response) => {
+    const payload = loginSchema.parse(request.body);
+    const session = loginUser(payload);
 
-  // CHORD-117: Payout readiness checklist
-  registerPayoutReadinessRoutes(app);
+    response.status(200).json({
+      message: "Login starter flow completed.",
+      session
+    });
+  });
 
-  registerModules(app);
-  app.use(notFoundHandler);
-  app.use(errorHandler);
+  app.post("/api/v1/auth/logout", (request, response) => {
+    const payload = logoutSchema.parse(request.body);
+    const removed = logoutUser(payload.token);
+
+    response.status(200).json({
+      message: removed ? "Session removed." : "Session was already absent."
+    });
+  });
 
   return app;
 }

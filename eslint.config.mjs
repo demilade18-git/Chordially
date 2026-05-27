@@ -7,7 +7,6 @@ export default tseslint.config(
     ignores: [
       "**/node_modules/**",
       "**/dist/**",
-      "**/build/**",
       "**/.next/**",
       "**/.expo/**",
       "**/coverage/**"
@@ -27,9 +26,7 @@ export default tseslint.config(
   },
   {
     files: ["**/*.{ts,tsx}"],
-    extends: [
-      ...tseslint.configs.recommended
-    ],
+    extends: [...tseslint.configs.recommended],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -38,8 +35,7 @@ export default tseslint.config(
     },
     rules: {
       "no-console": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }]
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
     }
   }
 );

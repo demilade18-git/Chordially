@@ -1,54 +1,20 @@
-export type UserRole = "fan" | "artist" | "admin";
+export type UserRole = "builder" | "artist" | "fan" | "admin";
 
-export interface AuthUser {
+export type AuthUser = {
   id: string;
   email: string;
-  username: string;
+  displayName: string;
   role: UserRole;
-}
+};
 
-export interface RegisterRequest {
-  email: string;
-  username: string;
-  password: string;
-  role?: UserRole;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface AuthResponse {
+export type AuthSession = {
   token: string;
-  user: AuthUser;
-}
+  userId: string;
+  createdAt: string;
+};
 
-export interface SessionResponse {
-  authenticated: boolean;
-  user: AuthUser | null;
-}
-
-export type ApiErrorCode =
-  | "VALIDATION_ERROR"
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "RATE_LIMITED"
-  | "INTERNAL_ERROR"
-  | "DEPENDENCY_ERROR";
-
-export interface ApiErrorEnvelope {
-  error: {
-    code: ApiErrorCode;
-    message: string;
-    details?: unknown;
-  };
-  meta: {
-    requestId?: string;
-    apiVersion: string;
-  };
-}
-
-export const API_V1_PREFIX = "/api/v1";
+export type Milestone = {
+  key: string;
+  title: string;
+  goal: string;
+};
