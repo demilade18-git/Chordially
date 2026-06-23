@@ -7,3 +7,19 @@ export function toSlug(text: string): string {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
 }
+
+export async function generateUniqueSlug(
+  displayName: string,
+  findBySlug: (slug: string) => Promise<unknown>
+): Promise<string> {
+  const base = toSlug(displayName)
+  let candidate = base
+  let suffix = 2
+
+  while (await findBySlug(candidate)) {
+    candidate = `${base}-${suffix}`
+    suffix++
+  }
+
+  return candidate
+}

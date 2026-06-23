@@ -51,6 +51,29 @@ describe("creatorService.createCreatorProfile", () => {
 
     expect(profile.slug).toBe("dj-ch-the")
   })
+
+  it("appends a numeric suffix when the base slug is already taken", async () => {
+    const userA = await createTestUser("a@test.com")
+    const userB = await createTestUser("b@test.com")
+    const userC = await createTestUser("c@test.com")
+
+    const profileA = await creatorService.createCreatorProfile({
+      userId: userA.id,
+      displayName: "Solar Vibes",
+    })
+    const profileB = await creatorService.createCreatorProfile({
+      userId: userB.id,
+      displayName: "Solar Vibes",
+    })
+    const profileC = await creatorService.createCreatorProfile({
+      userId: userC.id,
+      displayName: "Solar Vibes",
+    })
+
+    expect(profileA.slug).toBe("solar-vibes")
+    expect(profileB.slug).toBe("solar-vibes-2")
+    expect(profileC.slug).toBe("solar-vibes-3")
+  })
 })
 
 describe("creatorService.findBySlug", () => {
@@ -73,26 +96,45 @@ describe("creatorService.findBySlug", () => {
 })
 
 describe("creatorService.updateCreatorProfile", () => {
-  it("updates the fields provided", async () => {
+  it("updates the fields provided when called by the owner", async () => {
     const user = await createTestUser()
     const profile = await creatorService.createCreatorProfile({
       userId: user.id,
       displayName: "Original Name",
     })
 
-    const updated = await creatorService.updateCreatorProfile(profile.id, {
-      bio: "Updated bio",
-      location: "Abuja",
-    })
+    const updated = await creatorService.updateCreatorProfile(
+      profile.id,
+      { bio: "Updated bio", location: "Abuja" },
+      user.id
+    )
 
     expect(updated.bio).toBe("Updated bio")
     expect(updated.location).toBe("Abuja")
     expect(updated.displayName).toBe("Original Name")
   })
 
-  it("throws 404 CREATOR_NOT_FOUND for a non-existent profile id", async () => {
+  it("throws 403 FORBIDDEN when a different user attempts to update", async () => {
+    const owner = await createTestUser("owner@test.com")
+    const intruder = await createTestUser("intruder@test.com")
+    const profile = await creatorService.createCreatorProfile({
+      userId: owner.id,
+      displayName: "Owner's Profile",
+    })
+
     await expect(
-      creatorService.updateCreatorProfile("nonexistent-id", { bio: "Hello" })
+      creatorService.updateCreatorProfile(
+        profile.id,
+        { bio: "Malicious edit" },
+        intruder.id
+      )
+    ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" })
+  })
+
+  it("throws 404 CREATOR_NOT_FOUND for a non-existent profile id", async () => {
+    const user = await createTestUser()
+    await expect(
+      creatorService.updateCreatorProfile("nonexistent-id", { bio: "Hello" }, user.id)
     ).rejects.toMatchObject({ statusCode: 404, code: "CREATOR_NOT_FOUND" })
   })
 })

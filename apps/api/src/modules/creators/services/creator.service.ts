@@ -1,5 +1,5 @@
 import { AppError } from "../../../shared/errors/app-error.js"
-import { toSlug } from "../../../shared/utils/slug.js"
+import { generateUniqueSlug } from "../../../shared/utils/slug.js"
 import { creatorRepository } from "../repositories/creator.repository.js"
 import type {
   CreateCreatorInput,
@@ -30,18 +30,30 @@ export const creatorService = {
       )
     }
 
-    const slug = toSlug(input.displayName)
+    const slug = await generateUniqueSlug(
+      input.displayName,
+      creatorRepository.findBySlug
+    )
 
     return creatorRepository.create({ ...input, slug })
   },
 
   async updateCreatorProfile(
     id: string,
-    input: UpdateCreatorInput
+    input: UpdateCreatorInput,
+    requestingUserId: string
   ): Promise<CreatorProfile> {
     const profile = await creatorRepository.findById(id)
     if (!profile) {
       throw new AppError(404, "CREATOR_NOT_FOUND", "Creator profile not found")
+    }
+
+    if (profile.userId !== requestingUserId) {
+      throw new AppError(
+        403,
+        "FORBIDDEN",
+        "You do not have permission to edit this profile"
+      )
     }
 
     return creatorRepository.update(id, input)
