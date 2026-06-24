@@ -88,9 +88,10 @@ describe("EditProfilePage", () => {
     expect(
       await screen.findByText(/profile updated successfully/i)
     ).toBeInTheDocument()
-    expect(mockUpdateMe).toHaveBeenCalledWith("test-token", expect.objectContaining({
-      bio: "Updated bio",
-    }))
+    expect(mockUpdateMe).toHaveBeenCalledWith(
+      "test-token",
+      expect.objectContaining({ bio: "Updated bio" })
+    )
   })
 
   it("shows validation error for a display name that is too short", async () => {
