@@ -36,9 +36,9 @@ describe("GET /api/users/me", () => {
       .set("Authorization", `Bearer ${token}`)
 
     expect(res.status).toBe(200)
-    expect(res.body.userId).toBe(userId)
-    expect(res.body.creatorProfile).toBeNull()
-    expect(res.body.fanProfile).toBeNull()
+    expect(res.body.user.id).toBe(userId)
+    expect(res.body.user.creatorProfile).toBeNull()
+    expect(res.body.user.fanProfile).toBeNull()
   })
 
   it("includes fan profile when one exists", async () => {
@@ -53,9 +53,9 @@ describe("GET /api/users/me", () => {
       .set("Authorization", `Bearer ${token}`)
 
     expect(res.status).toBe(200)
-    expect(res.body.fanProfile).not.toBeNull()
-    expect(res.body.fanProfile.displayName).toBe("Fan User")
-    expect(res.body.fanProfile.genrePrefs).toEqual([])
+    expect(res.body.user.fanProfile).not.toBeNull()
+    expect(res.body.user.fanProfile.displayName).toBe("Fan User")
+    expect(res.body.user.fanProfile.genrePrefs).toEqual([])
   })
 })
 
@@ -104,7 +104,7 @@ describe("PATCH /api/users/me", () => {
       .get("/api/users/me")
       .set("Authorization", `Bearer ${token}`)
 
-    expect(meRes.body.fanProfile.genrePrefs).toEqual(["jazz", "indie"])
+    expect(meRes.body.user.fanProfile.genrePrefs).toEqual(["jazz", "indie"])
   })
 
   it("updates creator fields when the user has a creator profile", async () => {
@@ -125,7 +125,7 @@ describe("PATCH /api/users/me", () => {
       .get("/api/users/me")
       .set("Authorization", `Bearer ${token}`)
 
-    expect(meRes.body.creatorProfile.displayName).toBe("Updated Name")
-    expect(meRes.body.creatorProfile.bio).toBe("New bio")
+    expect(meRes.body.user.creatorProfile.displayName).toBe("Updated Name")
+    expect(meRes.body.user.creatorProfile.bio).toBe("New bio")
   })
 })

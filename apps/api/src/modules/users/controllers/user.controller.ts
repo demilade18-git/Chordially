@@ -4,6 +4,7 @@ import { creatorService } from "../../creators/services/creator.service.js"
 import { fanService } from "../../fans/services/fan.service.js"
 import { toCreatorResponse } from "../../creators/types/creator.types.js"
 import { toFanResponse } from "../../fans/types/fan.types.js"
+import { userService } from "../services/user.service.js"
 import { createAvatarUploadUrl } from "../../../shared/storage/s3.js"
 import { AppError } from "../../../shared/errors/app-error.js"
 
@@ -14,15 +15,19 @@ export const userController = {
     try {
       const userId = req.userId!
 
-      const [creatorProfile, fanProfile] = await Promise.all([
+      const [user, creatorProfile, fanProfile] = await Promise.all([
+        userService.findById(userId),
         creatorService.findByUserId(userId),
         fanService.findByUserId(userId),
       ])
 
       res.status(200).json({
-        userId,
-        creatorProfile: creatorProfile ? toCreatorResponse(creatorProfile) : null,
-        fanProfile: fanProfile ? toFanResponse(fanProfile) : null,
+        user: {
+          id: userId,
+          email: user!.email,
+          creatorProfile: creatorProfile ? toCreatorResponse(creatorProfile) : null,
+          fanProfile: fanProfile ? toFanResponse(fanProfile) : null,
+        },
       })
     } catch (error) {
       next(error)
